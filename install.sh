@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-## Version 1.0.1 by Developers Garden (www.devgarden.de)
+## Version 1.0.3 by Developers Garden (www.devgarden.de)
 #
 # JTL Shop 5 Installationsscript für Ubuntu/Debian
 #
@@ -8,22 +8,35 @@
 # Beziehen SSL Zertifikate über den Revers-Proxy-Manager
 # Epfehlung des Hauses -> https://github.com/fosrl/pangolin als Revers-Proxy-Manager
 # Optional -> https://github.com/traefik/traefik oder -> https://github.com/NginxProxyManager/nginx-proxy-manager
+# 
 
 set -e
 
 # === Konfiguration ===
+## JTL Version und Systemckeck 
 TEST_SCRIPT="https://build.jtl-shop.de/get/shop5-systemcheck-5-0-0.zip"
 JTL_VERSION="v5-5-2"
 JTL_ZIP_URL="https://build.jtl-shop.de/get/shop-$JTL_VERSION.zip"
-JTL_INSTALL_DIR="/var/www/html/jtlshop"
-TEMP_DIR="$PWD/jtlshop_download"
+
+# Domain und Systemadmin
 DOMAIN="example.com"
+SERVER_ADMIN_MAIL="webadmin@localhost"
+
+# Datenbank
 DB_NAME="jtlshop"
 DB_USER="jtluser"
 DB_PASS="sicherespasswort"
+
+# PHP 
 PHP_VERSION="8.3"
 APACHE_CONF="/etc/apache2/sites-available/jtlshop.conf"
-JTL_PHP_INI="/etc/php/${PHP_VERSION}/apache2/conf.d/99-jtl-shop.ini"
+JTL_PHP_INI="/etc/php/${PHP_VERSION}/apache2/conf.d/99-jtl-shop-$JTL_VERSION.ini"
+
+# Webroot 
+JTL_INSTALL_DIR="/var/www/html/jtlshop"
+TEMP_DIR="$PWD/jtlshop_download"
+
+# === Konfiguration ENDE ===
 
 echo "=== System wird aktualisiert ==="
 sudo apt update && sudo apt upgrade -y
@@ -44,7 +57,7 @@ sudo systemctl start mysql
 
 echo "=== Eigene PHP-Konfiguration für JTL Shop wird erstellt ==="
 sudo tee "$JTL_PHP_INI" > /dev/null <<EOL
-; JTL Shop 5 PHP-Konfiguration
+; JTL Shop $JTL_VERSION PHP-Konfiguration
 
 max_execution_time = 120
 memory_limit = 128M
@@ -107,7 +120,11 @@ MYSQL_SCRIPT
 echo "=== Apache Konfiguration für JTL Shop wird erstellt ==="
 sudo tee "$APACHE_CONF" > /dev/null <<EOL
 <VirtualHost *:80>
-    ServerAdmin webmaster@$DOMAIN
+    ServerAdmin $SERVER_ADMIN_MAIL
+    
+    ServerName $DOMAIN
+    ServerAlias www.$DOMAIN
+    
     DocumentRoot $JTL_INSTALL_DIR
 
     <Directory $JTL_INSTALL_DIR>
@@ -126,11 +143,16 @@ sudo a2ensite jtlshop.conf
 sudo a2dissite 000-default.conf
 sudo systemctl reload apache2
 
+
+echo ">> "
+echo ">> "
 echo "=== Installation abgeschlossen ==="
+echo ">> "
 echo ">> Öffne im Browser: https://$DOMAIN/systemcheck zur Prüfung des JTL Shop Systems"
-echo ">> Bitte löschen Sie nach der Prüfung den Ordner $JTL_INSTALL_DIR/systemcheck"
+echo ">> Bitte lösche nach dem Systemcheck den Ordner $JTL_INSTALL_DIR/systemcheck"
 echo ">> sudo rm -rf $JTL_INSTALL_DIR/systemcheck"
 echo ">> "
 echo ">> "
 echo ">> Öffne im Browser: https://$DOMAIN/install zur JTL Shop Einrichtung"
-
+echo ">> "
+echo ">> "
