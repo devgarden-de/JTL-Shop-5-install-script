@@ -14,21 +14,26 @@ set -e
 
 # === Konfiguration ===
 
-## JTL Systemckeck 
-TEST_SCRIPT="https://build.jtl-shop.de/get/shop5-systemcheck-5-0-0.zip"
-## JTL Version
-JTL_VERSION="v5-5-2"
-## JTL Shop
-JTL_ZIP_URL="https://build.jtl-shop.de/get/shop-$JTL_VERSION.zip"
-
-# Domain und Systemadmin
+# Domain und Serveradmin email
 DOMAIN="example.com"
 SERVER_ADMIN_MAIL="webadmin@localhost"
+
+# SSL Zertifikat & Shopadmin email falls abweichend
+USE_CERTBOT="true"
+#EMAIL="webmaster@example.com"
+EMAIL=$SERVER_ADMIN_MAIL
 
 # Datenbank
 DB_NAME="jtlshop"
 DB_USER="jtluser"
 DB_PASS="sicherespasswort"
+
+# JTL Systemckeck 
+TEST_SCRIPT="https://build.jtl-shop.de/get/shop5-systemcheck-5-0-0.zip"
+## JTL Version
+JTL_VERSION="v5-5-2"
+## JTL Shop
+JTL_ZIP_URL="https://build.jtl-shop.de/get/shop-$JTL_VERSION.zip"
 
 # PHP 
 PHP_VERSION="8.3"
@@ -37,6 +42,13 @@ JTL_PHP_INI="/etc/php/${PHP_VERSION}/apache2/conf.d/99-jtl-shop-$JTL_VERSION.ini
 
 # Webroot 
 JTL_INSTALL_DIR="/var/www/html/jtlshop"
+
+# UFW Firewall
+USE_UFW_FIREWALL="false"    # UFW Firewall installieren und Aktivieren
+UFW_OPEN_SSH="true"         # Erlaube SSH, damit du nicht ausgesperrt wirst!
+UFW_OPEN_APACHE="true"      # Öffnet Ports 80 & 443 über die Apache2 Gruppe
+
+# Scripthelfer
 TEMP_DIR="$PWD/jtlshop_download"
 
 # === Konfiguration ENDE ===
@@ -146,16 +158,47 @@ sudo a2ensite jtlshop.conf
 sudo a2dissite 000-default.conf
 sudo systemctl reload apache2
 
+echo "=== Zertifikat anfordern & Apache konfigurieren ==="
+if [ "$USE_CERTBOT" = true ]; then
+    sudo apt install -y certbot python3-certbot-apache
+    sudo certbot --apache -d "$DOMAIN" -d "www.$DOMAIN" --redirect --agree-tos -m "$EMAIL" --non-interactive
+    # Automatische Erneuerung testen
+    sudo certbot renew --dry-run
+fi
+
+echo "=== UFW Firewall aktivieren ==="
+if [ "$USE_UFW_FIREWALL" = true ]; then
+
+    sudo apt install -y ufw
+
+    if [ "$UFW_OPEN_SSH" = true ]; then
+        sudo ufw allow OpenSSH
+    fi
+
+    if [ "$UFW_OPEN_APACHE" = true ]; then
+        #sudo ufw allow 'Apache Full'
+        sudo ufw allow 80/tcp
+        sudo ufw allow 443/tcp
+    fi
+
+    sudo ufw enable
+    sudo ufw status verbose
+fi
 
 echo ">> "
 echo ">> "
 echo "=== Installation abgeschlossen ==="
-echo ">> "
+echo " "
 echo ">> Öffne im Browser: https://$DOMAIN/systemcheck zur Prüfung des JTL Shop Systems"
 echo ">> Bitte lösche nach dem Systemcheck den Ordner $JTL_INSTALL_DIR/systemcheck"
 echo ">> sudo rm -rf $JTL_INSTALL_DIR/systemcheck"
-echo ">> "
-echo ">> "
+echo " "
+echo " "
 echo ">> Öffne im Browser: https://$DOMAIN/install zur JTL Shop Einrichtung"
-echo ">> "
-echo ">> "
+echo " "
+echo ">> Datenbank benutzer: $DB_USER"
+echo ">> Datenbank password: $DB_PASS"
+echo ">> Datenbank name: $DB_NAME"
+echo ">> Datenbank host: localhost"
+echo " "
+echo " "

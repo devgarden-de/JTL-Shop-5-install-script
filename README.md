@@ -15,17 +15,9 @@ Automatisiertes Installationsscript für **JTL Shop 5** auf **Ubuntu/Debian**-ba
 - Setzt die Dateiberechtigungen
 - Legt eine Datenbank an
 - Erstellt eine Apache-Konfiguration mit deiner Domain
+- Erstellt SSL Zertifikate über Let's Encrypt - (Optional) 
+- Läd Firewall und konfiguriert diese - (Optional) 
 
-## ⚠️ Hinweise
-
-### Der Shop wird für den Betrieb **hinter einem Reverse Proxy** vorbereitet!
-
-
-### Empfohlene Reverse-Proxy-Lösungen:
-
-- 🔵 [Pangolin (empfohlen)](https://github.com/fosrl/pangolin)
-- ⚙️ [Traefik](https://github.com/traefik/traefik)
-- 🌐 [Nginx Proxy Manager](https://github.com/NginxProxyManager/nginx-proxy-manager)
 
 ## 🚀 Installation
 
@@ -43,8 +35,7 @@ DOMAIN="example.com"
 DB_NAME="jtlshop"
 DB_USER="jtluser"
 DB_PASS="sicherespasswort"
-PHP_VERSION="8.3"
-JTL_VERSION="v5-5-2"
+SERVER_ADMIN_MAIL="webadmin@localhost"
 ```
 Diese Daten kannst du im ``install.sh`` nach deinen Wünschen anpassen.
 
@@ -77,9 +68,8 @@ sudo rm -rf /var/www/html/jtlshop/systemcheck
 
 ## 👨‍💻 Unterstützte Betriebssysteme
 
-    ✅ Ubuntu 20.04, 22.04
-
-    ✅ Debian 10, 11, 12
+    ✅ Ubuntu >= 20.04 
+    ✅ Debian >= 10
 
 ## 📁 Projektstruktur
 ```bash
