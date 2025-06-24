@@ -13,9 +13,12 @@
 set -e
 
 # === Konfiguration ===
-## JTL Version und Systemckeck 
+
+## JTL Systemckeck 
 TEST_SCRIPT="https://build.jtl-shop.de/get/shop5-systemcheck-5-0-0.zip"
+## JTL Version
 JTL_VERSION="v5-5-2"
+## JTL Shop
 JTL_ZIP_URL="https://build.jtl-shop.de/get/shop-$JTL_VERSION.zip"
 
 # Domain und Systemadmin
