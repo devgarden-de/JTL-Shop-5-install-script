@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-## Version 1.0.0 by Developers Garden (www.devgarden.de)
+## Version 1.0.1 by Developers Garden (www.devgarden.de)
 #
 # JTL Shop 5 Installationsscript für Ubuntu/Debian
 #
@@ -15,11 +15,11 @@ set -e
 JTL_VERSION="v5-5-2"
 JTL_ZIP_URL="https://build.jtl-shop.de/get/shop-$JTL_VERSION.zip"
 JTL_INSTALL_DIR="/var/www/html/jtlshop"
-TEMP_DIR="/tmp/jtlshop_download"
+TEMP_DIR="$PWD/jtlshop_download"
 DB_NAME="jtlshop"
 DB_USER="jtluser"
 DB_PASS="sicherespasswort"
-PHP_VERSION="8.4"
+PHP_VERSION="8.3"
 APACHE_CONF="/etc/apache2/sites-available/jtlshop.conf"
 JTL_PHP_INI="/etc/php/${PHP_VERSION}/apache2/conf.d/99-jtl-shop.ini"
 
@@ -75,14 +75,11 @@ echo "=== JTL Shop ZIP wird heruntergeladen ==="
 curl -L "$JTL_ZIP_URL" -o "$TEMP_DIR/jtlshop.zip"
 
 echo "=== ZIP-Datei wird entpackt ==="
-unzip "$TEMP_DIR/jtlshop.zip" -d "$TEMP_DIR"
+mkdir -p "$JTL_INSTALL_DIR"
+sudo unzip "$TEMP_DIR/jtlshop.zip" -d "$JTL_INSTALL_DIR"
 
-# Entpacktes Verzeichnis erkennen
-JTL_SOURCE_DIR=$(find "$TEMP_DIR" -mindepth 1 -maxdepth 1 -type d)
-
-echo "=== JTL Shop wird nach $JTL_INSTALL_DIR verschoben ==="
-sudo rm -rf "$JTL_INSTALL_DIR"
-sudo mv "$JTL_SOURCE_DIR" "$JTL_INSTALL_DIR"
+echo "=== Cleanup ==="
+sudo rm -rf "$TEMP_DIR"
 
 echo "=== Dateiberechtigungen werden gesetzt ==="
 sudo chown -R www-data:www-data "$JTL_INSTALL_DIR"
