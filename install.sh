@@ -75,11 +75,17 @@ mkdir -p "$TEMP_DIR"
 
 echo "=== JTL Shop ZIP wird heruntergeladen ==="
 curl -L "$JTL_ZIP_URL" -o "$TEMP_DIR/jtlshop.zip"
-curl -L "$JTEST_SCRIPT" -o "$TEMP_DIR/systemcheck.zip"
 
-echo "=== ZIP-Datei wird entpackt ==="
+echo "=== JTL Systemcheck ZIP wird heruntergeladen ==="
+curl -L "$TEST_SCRIPT" -o "$TEMP_DIR/systemcheck.zip"
+
+echo "=== Erstelle web Ordner ==="
 mkdir -p "$JTL_INSTALL_DIR"
+
+echo "=== JTL Shop wird entpackt ==="
 sudo unzip "$TEMP_DIR/jtlshop.zip" -d "$JTL_INSTALL_DIR"
+
+echo "=== JTL Systemcheck wird entpackt ==="
 sudo unzip "$TEMP_DIR/systemcheck.zip" -d "$JTL_INSTALL_DIR"
 
 echo "=== Cleanup ==="
