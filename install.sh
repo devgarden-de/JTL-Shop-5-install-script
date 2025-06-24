@@ -12,10 +12,12 @@
 set -e
 
 # === Konfiguration ===
+TEST_SCRIPT="https://build.jtl-shop.de/get/shop5-systemcheck-5-0-0.zip"
 JTL_VERSION="v5-5-2"
 JTL_ZIP_URL="https://build.jtl-shop.de/get/shop-$JTL_VERSION.zip"
 JTL_INSTALL_DIR="/var/www/html/jtlshop"
 TEMP_DIR="$PWD/jtlshop_download"
+DOMAIN="example.com"
 DB_NAME="jtlshop"
 DB_USER="jtluser"
 DB_PASS="sicherespasswort"
@@ -30,8 +32,8 @@ echo "=== Erforderliche Pakete werden installiert ==="
 sudo apt install -y apache2 mysql-server unzip curl \
 php${PHP_VERSION} php${PHP_VERSION}-cli php${PHP_VERSION}-mysql \
 php${PHP_VERSION}-gd php${PHP_VERSION}-xml php${PHP_VERSION}-curl \
-php${PHP_VERSION}-mbstring php${PHP_VERSION}-zip php${PHP_VERSION}-intl \
-php${PHP_VERSION}-bcmath php${PHP_VERSION}-opcache php${PHP_VERSION}-apcu \
+php${PHP_VERSION}-mbstring php${PHP_VERSION}-zip php${PHP_VERSION}-intl php${PHP_VERSION}-soap\
+php${PHP_VERSION}-bcmath php${PHP_VERSION}-opcache php${PHP_VERSION}-apcu php${PHP_VERSION}-imagick\
 libapache2-mod-php${PHP_VERSION}
 
 echo "=== Apache und MySQL werden gestartet ==="
@@ -73,10 +75,12 @@ mkdir -p "$TEMP_DIR"
 
 echo "=== JTL Shop ZIP wird heruntergeladen ==="
 curl -L "$JTL_ZIP_URL" -o "$TEMP_DIR/jtlshop.zip"
+curl -L "$JTEST_SCRIPT" -o "$TEMP_DIR/systemcheck.zip"
 
 echo "=== ZIP-Datei wird entpackt ==="
 mkdir -p "$JTL_INSTALL_DIR"
 sudo unzip "$TEMP_DIR/jtlshop.zip" -d "$JTL_INSTALL_DIR"
+sudo unzip "$TEMP_DIR/systemcheck.zip" -d "$JTL_INSTALL_DIR"
 
 echo "=== Cleanup ==="
 sudo rm -rf "$TEMP_DIR"
@@ -97,7 +101,7 @@ MYSQL_SCRIPT
 echo "=== Apache Konfiguration für JTL Shop wird erstellt ==="
 sudo tee "$APACHE_CONF" > /dev/null <<EOL
 <VirtualHost *:80>
-    ServerAdmin webmaster@localhost
+    ServerAdmin webmaster@$DOMAIN
     DocumentRoot $JTL_INSTALL_DIR
 
     <Directory $JTL_INSTALL_DIR>
@@ -113,7 +117,14 @@ EOL
 
 echo "=== Apache-Konfiguration wird aktiviert ==="
 sudo a2ensite jtlshop.conf
+sudo a2dissite 000-default.conf
 sudo systemctl reload apache2
 
 echo "=== Installation abgeschlossen ==="
-echo ">> Öffne im Browser: http://<deine-server-ip>/ zur JTL Shop Einrichtung"
+echo ">> Öffne im Browser: https://$DOMAIN/systemcheck zur Prüfung des JTL Shop Systems"
+echo ">> Bitte löschen Sie nach der Prüfung den Ordner $JTL_INSTALL_DIR/systemcheck"
+echo ">> sudo rm -rf $JTL_INSTALL_DIR/systemcheck"
+echo ">> "
+echo ">> "
+echo ">> Öffne im Browser: https://$DOMAIN/install zur JTL Shop Einrichtung"
+
