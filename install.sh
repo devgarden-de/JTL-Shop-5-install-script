@@ -32,8 +32,8 @@ echo "=== Erforderliche Pakete werden installiert ==="
 sudo apt install -y apache2 mysql-server unzip curl \
 php${PHP_VERSION} php${PHP_VERSION}-cli php${PHP_VERSION}-mysql \
 php${PHP_VERSION}-gd php${PHP_VERSION}-xml php${PHP_VERSION}-curl \
-php${PHP_VERSION}-mbstring php${PHP_VERSION}-zip php${PHP_VERSION}-intl php${PHP_VERSION}-soap\
-php${PHP_VERSION}-bcmath php${PHP_VERSION}-opcache php${PHP_VERSION}-apcu php${PHP_VERSION}-imagick\
+php${PHP_VERSION}-mbstring php${PHP_VERSION}-zip php${PHP_VERSION}-intl php${PHP_VERSION}-soap \
+php${PHP_VERSION}-bcmath php${PHP_VERSION}-opcache php${PHP_VERSION}-apcu php${PHP_VERSION}-imagick \
 libapache2-mod-php${PHP_VERSION}
 
 echo "=== Apache und MySQL werden gestartet ==="
