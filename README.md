@@ -25,6 +25,8 @@ Automatisiertes Installationsscript für **JTL Shop 5** auf **Ubuntu/Debian**-ba
 
 ```bash
 git clone https://github.com/devgarden-de/JTL-Shop-5-install-script.git
+```
+```bash
 cd JTL-Shop-5-install-script
 ```
 
@@ -82,7 +84,8 @@ JTL-Shop-5-install-script/
 ## 🛡️ Lizenz
 
 Dieses Projekt steht unter der MIT License – siehe LICENSE Datei für weitere Informationen.
-✨ Credits
+
+## 👨‍💻 Credits
 
 Erstellt von Developers Garden
 
