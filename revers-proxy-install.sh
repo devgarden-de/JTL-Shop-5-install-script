@@ -8,14 +8,15 @@
 # Beziehen SSL Zertifikate (Certbot) über den Revers-Proxy-Manager die von aussen sichtbar sind.
 # INFO: Ist ein Reverse Proxy im Einsatz, so kann der Certbot nicht auf "example.com/.well-known/" zugreifen, weild der Pangolin Revers-Proxy-Manager das blockiert.
 # 
-
+# Stoppe Script bei Fehler
 set -e
 
 # === Konfiguration ===
 
-# Domain und Serveradmin email
+# Domain, Server & email
 DOMAIN="example.com"
 SERVER_ADMIN_MAIL="admin@$DOMAIN"
+SET_TIMEZONE="Europe/Berlin"
 
 #EMAIL="webmaster@example.com"
 EMAIL=$SERVER_ADMIN_MAIL
@@ -55,6 +56,12 @@ KEYFILE="${DOMAIN}.key"
 CRTFILE="${DOMAIN}.crt"
 
 # === Konfiguration ENDE ===
+echo "=== Schreibe Log Datei ==="
+exec > >(tee -a $PWD/JTL_install_logfile.log) 2>&1
+
+echo "=== Server timezones ==="
+timedatectl set-timezone $SET_TIMEZONE
+timedatectl
 
 echo "=== System wird aktualisiert ==="
 sudo apt update && sudo apt upgrade -y
