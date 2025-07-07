@@ -17,6 +17,7 @@ set -e
 # Domain und Serveradmin email
 DOMAIN="example.com"
 SERVER_ADMIN_MAIL="webadmin@localhost"
+SET_TIMEZONE="Europe/Berlin"
 
 # SSL Zertifikat & Shopadmin email falls abweichend
 USE_CERTBOT="true"
@@ -52,6 +53,13 @@ UFW_OPEN_APACHE="true"      # Öffnet Ports 80 & 443 über die Apache2 Gruppe
 TEMP_DIR="$PWD/jtlshop_download"
 
 # === Konfiguration ENDE ===
+
+echo "=== Schreibe Log Datei ==="
+exec > >(tee -a $PWD/JTL_install_logfile.log) 2>&1
+
+echo "=== Server timezones ==="
+timedatectl set-timezone $SET_TIMEZONE
+timedatectl
 
 echo "=== System wird aktualisiert ==="
 sudo apt update && sudo apt upgrade -y
