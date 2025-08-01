@@ -1,5 +1,6 @@
 # Under construction!!!
 
+Das Script befindet sich noch in entwicklung!
 
 # 🛒 JTL Shop 5 Install Script
 
