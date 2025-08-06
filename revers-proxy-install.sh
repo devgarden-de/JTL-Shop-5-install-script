@@ -24,9 +24,9 @@ EMAIL=$SERVER_ADMIN_MAIL
 # MySQL Datenbank
 DB_NAME="jtlshop"
 DB_USER="jtluser"
-DB_PASS="sicherespasswort"
+DB_PASS=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 20 | head -n 1)
 
-## JTL Version
+## JTL Version []
 JTL_VERSION="v5-5-2"
 ## JTL Shop
 JTL_ZIP_URL="https://build.jtl-shop.de/get/shop-$JTL_VERSION.zip"
@@ -34,13 +34,13 @@ JTL_ZIP_URL="https://build.jtl-shop.de/get/shop-$JTL_VERSION.zip"
 TEST_SCRIPT="https://build.jtl-shop.de/get/shop5-systemcheck-5-0-0.zip"
 
 # PHP
-PHP_VERSION="8.3"
+PHP_VERSION="8.2"
 APACHE_CONF="/etc/apache2/sites-available/jtlshop.conf"
 APACHE_CONF_SSL="/etc/apache2/sites-available/jtlshop-ssl.conf"
 JTL_PHP_INI="/etc/php/${PHP_VERSION}/apache2/conf.d/99-jtl-shop-$JTL_VERSION.ini"
 
 # Webroot
-JTL_INSTALL_DIR="/var/www/html/jtlshop"
+JTL_INSTALL_DIR="/var/www/html/jtlshop-$JTL_VERSION"
 
 # UFW Firewall
 USE_UFW_FIREWALL="false"    # UFW Firewall installieren und Aktivieren
@@ -56,6 +56,7 @@ KEYFILE="${DOMAIN}.key"
 CRTFILE="${DOMAIN}.crt"
 
 # === Konfiguration ENDE ===
+
 echo "=== Schreibe Log Datei ==="
 exec > >(tee -a $PWD/JTL_install_logfile.log) 2>&1
 
@@ -67,7 +68,7 @@ echo "=== System wird aktualisiert ==="
 sudo apt update && sudo apt upgrade -y
 
 echo "=== Erforderliche Pakete werden installiert ==="
-sudo apt install -y apache2 mysql-server unzip curl git \
+sudo apt install -y apache2 mariadb-server mariadb-client unzip curl \
 php${PHP_VERSION} php${PHP_VERSION}-cli php${PHP_VERSION}-mysql \
 php${PHP_VERSION}-gd php${PHP_VERSION}-xml php${PHP_VERSION}-curl \
 php${PHP_VERSION}-mbstring php${PHP_VERSION}-zip php${PHP_VERSION}-intl php${PHP_VERSION}-soap \
@@ -155,7 +156,6 @@ echo "=== Apache Konfiguration HTTP zu HTTPS wird erstellt ==="
 sudo tee "$APACHE_CONF" > /dev/null <<EOL
 <VirtualHost *:80>
     ServerAdmin $SERVER_ADMIN_MAIL
-    
     ServerName $DOMAIN
     ServerAlias www.$DOMAIN
     
