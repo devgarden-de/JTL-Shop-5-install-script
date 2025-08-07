@@ -257,7 +257,7 @@ else
 fi
 
 sudo -u www-data php "$JTL_INSTALL_DIR/cli" shop:install \
-    --shop-url="https://$(DOMAIN -f)" \
+    --shop-url="https://$DOMAIN" \
     --database-host="$DB_HOST" \
     --database-name="$DB_NAME" \
     --database-user="$DB_USER" \
