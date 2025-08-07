@@ -1,59 +1,80 @@
 #!/bin/bash
 #
-## Version 1.0.3 by Developers Garden (www.devgarden.de)
-#
-# JTL Shop 5 Installationsscript für Ubuntu/Debian hinter einem Revers-Proxy-Manager
-#
-# Wir erstellen eigene SSL Zertifikate (Self Signed) für ein sauberen Betrieb des Shops.
-# Beziehen SSL Zertifikate (Certbot) über den Revers-Proxy-Manager die von aussen sichtbar sind.
-# INFO: Ist ein Reverse Proxy im Einsatz, so kann der Certbot nicht auf "example.com/.well-known/" zugreifen, weild der Pangolin Revers-Proxy-Manager das blockiert.
+## Version 1.1.0 by Developers Garden (www.devgarden.de)
 # 
-# Stoppe Script bei Fehler
-set -e
+
+set -e      # Stoppe Script bei Fehler
 
 # === Konfiguration ===
+while true; do
+    read -p "Bitte geben Sie die domain ohne www ein (example.com): " DOMAIN
+    if [[ -z "$DOMAIN" ]]; then
+        echo "Fehler: Domain darf nicht leer sein!"
+    else
+        break
+    fi
+done
 
 # Domain, Server & email
-DOMAIN="example.com"
+#DOMAIN="example.com"
 SERVER_ADMIN_MAIL="admin@$DOMAIN"
 SET_TIMEZONE="Europe/Berlin"
 
 #EMAIL="webmaster@example.com"
 EMAIL=$SERVER_ADMIN_MAIL
 
+# SSL Zertifikat
+read -p "Nutzen Sie ein Reverse Proxy Manager? [Y/n] " -n 1 -r
+echo
+if [[ $REPLY =~ ^[YyJj]$ ]] && [[ ! -z $REPLY ]]; then
+    USE_CERTBOT="false"
+else
+    USE_CERTBOT="true"
+fi
+
 # MySQL Datenbank
+DB_HOST="localhost"
 DB_NAME="jtlshop"
 DB_USER="jtluser"
 DB_PASS=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 20 | head -n 1)
 
-## JTL Version []
+# Admin und Sync Benutzer
+ADMIN_USER="admin"
+ADMIN_PASS=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 20 | head -n 1)
+SYNC_USER="jtlsync"
+SYNC_PASS=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 20 | head -n 1)
+
+## JTL Version
 JTL_VERSION="v5-5-2"
-## JTL Shop
 JTL_ZIP_URL="https://build.jtl-shop.de/get/shop-$JTL_VERSION.zip"
-# JTL Systemckeck 
 TEST_SCRIPT="https://build.jtl-shop.de/get/shop5-systemcheck-5-0-0.zip"
 
 # PHP
 PHP_VERSION="8.2"
+JTL_PHP_INI="/etc/php/${PHP_VERSION}/apache2/conf.d/99-jtl-shop-$JTL_VERSION.ini"
+MAX_EXECUTION_TIME="120"        # Maximale Ausführungszeit eines PHP-Skripts in Sekunden.
+MEMORY_LIMIT="128M"             # Maximale Speichernutzung pro PHP-Skript.
+UPLOAD_MAX_FILE_SIZE="6M"       # Maximale Größe einer hochgeladenen Datei.
+POST_MAX_SIZE="8M"              # Maximale Größe der gesamten POST-Daten.
+
+# Apache 
 APACHE_CONF="/etc/apache2/sites-available/jtlshop.conf"
 APACHE_CONF_SSL="/etc/apache2/sites-available/jtlshop-ssl.conf"
-JTL_PHP_INI="/etc/php/${PHP_VERSION}/apache2/conf.d/99-jtl-shop-$JTL_VERSION.ini"
-
-# Webroot
 JTL_INSTALL_DIR="/var/www/html/jtlshop-$JTL_VERSION"
 
 # UFW Firewall
-USE_UFW_FIREWALL="false"    # UFW Firewall installieren und Aktivieren
+USE_UFW_FIREWALL="false"    # UFW Firewall installieren und Aktivieren?
 UFW_OPEN_SSH="true"         # Erlaube SSH, damit du nicht ausgesperrt wirst!
 UFW_OPEN_APACHE="true"      # Öffnet Ports 80 & 443 über die Apache2 Gruppe
 
 # Scripthelfer
 TEMP_DIR="$PWD/jtlshop_download"
 
-# Selbst seginiertes Zertifkat
-DAYS=36500
+# Selbst seginiertes Zertifkat (Nur bei Reverse Proxy einsatz)
+DAYS=3650                   # 365 Tage/Jahr * 10 Jahre = 3650 Tage Gültig
 KEYFILE="${DOMAIN}.key"
 CRTFILE="${DOMAIN}.crt"
+RSA_KEY_SIZE="4096"         # 2048 oder 4096 bit Schlüssellänge
 
 # === Konfiguration ENDE ===
 
@@ -76,8 +97,7 @@ php${PHP_VERSION}-bcmath php${PHP_VERSION}-opcache php${PHP_VERSION}-apcu php${P
 libapache2-mod-php${PHP_VERSION}
 
 echo "=== MySQL ==="
-sudo systemctl enable mysql
-sudo systemctl start mysql
+sudo systemctl enable mysql && sudo systemctl start mysql
 
 echo "=== MySQL-Datenbank wird eingerichtet ==="
 sudo mysql -u root <<MYSQL_SCRIPT
@@ -89,15 +109,14 @@ MYSQL_SCRIPT
 
 sudo systemctl restart mysql
 
-echo "=== PHP ==="
-echo "=== Eigene PHP-Konfiguration für JTL Shop wird erstellt ==="
+echo "=== Eigene PHP-Konfiguration für JTL Shop $JTL_VERSION wird erstellt ==="
 sudo tee "$JTL_PHP_INI" > /dev/null <<EOL
 ; JTL Shop $JTL_VERSION PHP-Konfiguration
 
-max_execution_time = 120
-memory_limit = 128M
-upload_max_filesize = 6M
-post_max_size = 8M
+max_execution_time = ${MAX_EXECUTION_TIME}
+memory_limit = ${MEMORY_LIMIT}
+upload_max_filesize = ${UPLOAD_MAX_FILE_SIZE}
+post_max_size = ${POST_MAX_SIZE}
 allow_url_fopen = On
 
 [opcache]
@@ -112,53 +131,46 @@ opcache.fast_shutdown=1
 apc.enable_cli=1
 EOL
 
-echo "=== Temporäres Verzeichnis wird erstellt ==="
+echo "=== Temporäres Installationsverzeichnis wird erstellt ==="
 mkdir -p "$TEMP_DIR"
 
-echo "=== JTL Shop ZIP wird heruntergeladen ==="
+echo "=== JTL Shop $JTL_VERSION ZIP wird heruntergeladen ==="
 curl -L "$JTL_ZIP_URL" -o "$TEMP_DIR/jtlshop.zip"
 
 echo "=== JTL Systemcheck ZIP wird heruntergeladen ==="
 curl -L "$TEST_SCRIPT" -o "$TEMP_DIR/systemcheck.zip"
 
-echo "=== Erstelle web Ordner ==="
+echo "=== Erstelle webroot Ordner ==="
 mkdir -p "$JTL_INSTALL_DIR"
 
-echo "=== JTL Shop wird entpackt ==="
+echo "=== JTL Shop $JTL_VERSION wird entpackt ==="
 sudo unzip "$TEMP_DIR/jtlshop.zip" -d "$JTL_INSTALL_DIR"
 
 echo "=== JTL Systemcheck wird entpackt ==="
 sudo unzip "$TEMP_DIR/systemcheck.zip" -d "$JTL_INSTALL_DIR"
 
-echo "=== Cleanup ==="
+echo "=== Cleanup - Entferne Temoräres Verzeichniss ==="
 sudo rm -rf "$TEMP_DIR"
 
 echo "=== Dateiberechtigungen werden gesetzt ==="
 sudo chown -R www-data:www-data "$JTL_INSTALL_DIR"
 sudo find "$JTL_INSTALL_DIR" -type d -exec chmod 755 {} \;
 sudo find "$JTL_INSTALL_DIR" -type f -exec chmod 644 {} \;
+chmod -R 755 bilder/* dbeS/tmp dbeS/tmp dbeS/logs admin/templates_c jtllogs install/logs templates_c includes/config.JTL-Shop.ini.php mediafiles admin/includes/emailpdfs shopinfo.xml rss.xml uploads export media
 
-echo "=== Erstelle SSL Zertifikat ==="
-sudo mkdir -p /etc/ssl/$DOMAIN/private
-sudo mkdir -p /etc/ssl/$DOMAIN/certs
-sudo openssl req -newkey rsa:2048 -nodes -keyout "/etc/ssl/$DOMAIN/private/$KEYFILE" -x509 -days $DAYS -out "/etc/ssl/$DOMAIN/certs/$CRTFILE" -subj "/CN=$DOMAIN"
-
-echo "=== Apache ==="
+echo "=== Richte Apache vhost Port 80 ein ==="
 sudo systemctl enable apache2
 sudo systemctl start apache2
-
-echo "=== Apache-Module werden aktiviert ==="
 sudo a2enmod rewrite deflate expires headers ssl
+sudo a2dissite 000-default.conf
 
-sudo systemctl restart apache2
-
-echo "=== Apache Konfiguration HTTP zu HTTPS wird erstellt ==="
 sudo tee "$APACHE_CONF" > /dev/null <<EOL
 <VirtualHost *:80>
     ServerAdmin $SERVER_ADMIN_MAIL
     ServerName $DOMAIN
     ServerAlias www.$DOMAIN
-    
+
+    DocumentRoot $JTL_INSTALL_DIR
     RewriteEngine On
     RewriteCond %{HTTPS} off
     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
@@ -168,7 +180,23 @@ sudo tee "$APACHE_CONF" > /dev/null <<EOL
 </VirtualHost>
 EOL
 
-echo "=== Apache Konfiguration HTTPS wird erstellt ==="
+sudo a2ensite jtlshop.conf
+
+echo "=== Erstelle SSL Zertifikat && Apache SSL vHost ==="
+if [ "$USE_CERTBOT" = true ]; then
+    echo "=== Certbot Zertifikat anfordern & Apache konfigurieren ==="
+    sudo apt install python3 python3-dev python3-venv libaugeas-dev gcc
+    sudo python3 -m venv /opt/certbot/
+    sudo /opt/certbot/bin/pip install --upgrade pip
+    sudo /opt/certbot/bin/pip install certbot certbot-apache
+    sudo certbot --apache -d "$DOMAIN" -d "www.$DOMAIN" --redirect --agree-tos -m "$EMAIL" --non-interactive
+    echo "0 0,12 * * * root /opt/certbot/bin/python -c 'import random; import time; time.sleep(random.random() * 3600)' && sudo certbot renew -q" | sudo tee -a /etc/crontab > /dev/null
+else
+    echo "=== Selbst segnierte Zertifikate für Reverse Proxy ==="
+    sudo mkdir -p /etc/ssl/$DOMAIN/private
+    sudo mkdir -p /etc/ssl/$DOMAIN/certs
+    sudo openssl req -newkey rsa:$RSA_KEY_SIZE -nodes -keyout "/etc/ssl/$DOMAIN/private/$KEYFILE" -x509 -days $DAYS -out "/etc/ssl/$DOMAIN/certs/$CRTFILE" -subj "/CN=$DOMAIN"
+
 sudo tee "$APACHE_CONF_SSL" > /dev/null <<EOL
 <VirtualHost *:443>
     ServerAdmin $SERVER_ADMIN_MAIL
@@ -191,10 +219,10 @@ sudo tee "$APACHE_CONF_SSL" > /dev/null <<EOL
 </VirtualHost>
 EOL
 
-echo "=== Apache-Konfiguration wird aktiviert und 000-default deaktiviert ==="
-sudo a2ensite jtlshop.conf
 sudo a2ensite jtlshop-ssl.conf
-sudo a2dissite 000-default.conf
+
+fi
+
 sudo systemctl reload apache2
 
 
@@ -215,20 +243,68 @@ fi
 
 echo ">> "
 echo ">> "
-echo "=== Installation abgeschlossen ==="
+echo "=== Basis Installation abgeschlossen ==="
 echo " "
-echo ">> Öffne im Browser: https://$DOMAIN/systemcheck zur Prüfung des JTL Shop Systems"
-echo ">> Bitte lösche nach dem Systemcheck den Ordner $JTL_INSTALL_DIR/systemcheck"
-echo ">> sudo rm -rf $JTL_INSTALL_DIR/systemcheck"
+echo ">> Öffne Sie im Browser: https://$DOMAIN/systemcheck zur Prüfung des JTL Shop Systems"
+echo ">> "
+
+read -p "Systemcheck war korrekt? [Y/n] " -n 1 -r
+echo  # Zeilenumbruch nach Eingabe
+if [[ $REPLY =~ ^[YyJj]$ ]] && [[ ! -z $REPLY ]]; then
+    sudo rm -rf $JTL_INSTALL_DIR/systemcheck
+else
+    echo ">> Anscheinend gibt es ein Fehler im Script. "
+    echo ">> Bitte kontaktieren Sie uns! "
+fi
+
+sudo -u www-data php "$JTL_INSTALL_DIR/cli" shop:install \
+    --shop-url="https://$(DOMAIN -f)" \
+    --database-host="$DB_HOST" \
+    --database-name="$DB_NAME" \
+    --database-user="$DB_USER" \
+    --database-password="$DB_PASS" \
+    --admin-user="$ADMIN_USER" \
+    --admin-password="$ADMIN_PASS" \
+    --sync-user="$SYNC_USER" \
+    --sync-password="$SYNC_PASS" \
+    --file-owner="www-data" \
+    --file-group="www-data"
+
+echo " === Entferne install verzeichniss und korrigiere Dateirechte ==="
+sudo chmod 644 $JTL_INSTALL_DIR/includes/config.JTL-Shop.ini.php
+sudo rm -rf $JTL_INSTALL_DIR/install
+
+
 echo " "
+echo " === Bitte notieren Sie sich die Zugangsdaten!"
 echo " "
-echo ">> Öffne im Browser: https://$DOMAIN/install zur JTL Shop Einrichtung"
+echo "## Hauptbenutzer "
+echo " "
+echo ">> Admin Benutzer: $ADMIN_USER"
+echo ">> Admin Password: $ADMIN_PASS"
+echo " "
+echo "## Benutzer für die Syncronisation zwischen JTL Shop & JTL Wawi  "
+echo " "
+echo ">> JTL WAWI Sync Benutzer: $SYNC_USER"
+echo ">> JTL WAWI Sync Benutzer: $SYNC_PASS"
+echo " "
+echo "## MySQL Dantenbank (mariadb) "
 echo " "
 echo ">> Datenbank benutzer: $DB_USER"
 echo ">> Datenbank password: $DB_PASS"
 echo ">> Datenbank name: $DB_NAME"
-echo ">> Datenbank host: localhost"
+echo ">> Datenbank host: $DB_HOST"
 echo " "
-echo ">> SSL Zertifikate"
-echo ">> SSLCertificateFile /etc/ssl/$DOMAIN/certs/$CRTFILE "
-echo ">> SSLCertificateKeyFile /etc/ssl/$DOMAIN/private/$KEYFILE "
+echo " "
+echo " ## Ihr Onlineshop $DOMAIN ist einsatzbereit "
+echo " "
+echo " Onlineshop "
+echo " https://$DOMAIN/ "
+echo " "
+echo " Administrations backend "
+echo " https://$DOMAIN/admin "
+echo " "
+echo " "
+echo " Fahren Sie mit der Grundkonfiguration fort " 
+echo " https://guide.jtl-software.com/jtl-shop/jtl-shop-kauf-editionen/grundkonfiguration-vornehmen/ "
+echo " "
