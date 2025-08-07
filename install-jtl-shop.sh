@@ -156,7 +156,6 @@ echo "=== Dateiberechtigungen werden gesetzt ==="
 sudo chown -R www-data:www-data "$JTL_INSTALL_DIR"
 sudo find "$JTL_INSTALL_DIR" -type d -exec chmod 755 {} \;
 sudo find "$JTL_INSTALL_DIR" -type f -exec chmod 644 {} \;
-chmod -R 755 bilder/* dbeS/tmp dbeS/tmp dbeS/logs admin/templates_c jtllogs install/logs templates_c includes/config.JTL-Shop.ini.php mediafiles admin/includes/emailpdfs shopinfo.xml rss.xml uploads export media
 
 echo "=== Richte Apache vhost Port 80 ein ==="
 sudo systemctl enable apache2
