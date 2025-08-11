@@ -1,6 +1,3 @@
-# Under construction!!!
-
-
 # 🛒 JTL Shop 5 Install Script
 
 Automatisiertes Installationsscript für **JTL Shop 5** auf **Ubuntu/Debian**-basierten Servern.
@@ -13,8 +10,8 @@ Automatisiertes Installationsscript für **JTL Shop 5** auf **Ubuntu/Debian**-ba
 - Installiert Apache, MySQL, PHP 8.x und alle nötigen PHP-Module
 - Erstellt eine spezifische php.ini für JTL Shop 5
 - Aktiviert Apache-Module (rewrite, headers, etc.)
-- Lädt JTL Shop 5 und das Systemcheck-Tool herunter
-- Entpackt und kopiert die Dateien nach /var/www/html/jtlshop
+- Lädt JTL Shop 5 und das Systemcheck-Tool
+- Entpackt und kopiert die Dateien nach /var/www/html/jtlshop-$VERSION
 - Setzt die Dateiberechtigungen
 - Legt eine Datenbank an
 - Erstellt eine Apache-Konfiguration mit deiner Domain
@@ -34,20 +31,7 @@ cd JTL-Shop-5-install-script
 ```
 
 ### 2. Script anpassen
-Voreinstellungen im Script
-```bash
-DOMAIN="example.com"
-DB_NAME="jtlshop"
-DB_USER="jtluser"
-DB_PASS="sicherespasswort"
-SERVER_ADMIN_MAIL="webadmin@localhost"
-```
-Diese Daten kannst du im ``install.sh`` nach deinen Wünschen anpassen.
-
-```bash
-nano install.sh
-```
-Passe ``DOMAIN``, ``DB_USER``, ``DB_PASS``, ``JTL_VERSION``, etc. nach Bedarf an.
+Bitte lies dir das Script erst durch. Führe nie Scripte aus ohne sie gelesen zu haben!
 
 ### 3. Script ausführbar machen
 ```bash
@@ -59,38 +43,16 @@ sudo ./install.sh
 ```
 > Kaffee holen!
 
-## 5. Installation Abschlissen
-
-Öffne im Browser: https://deine-domain.de/systemcheck zur Prüfung des JTL Shop Systems.
-
-> Bitte lösche nach der Prüfung den Ordner ``/var/www/html/jtlshop/systemcheck``
-
-```bash
-sudo rm -rf /var/www/html/jtlshop/systemcheck
-```
-
-Öffne im Browser: https://deine-domain.de/install und schliße deine JTL Shop Einrichtung ab!
-
-## 👨‍💻 Unterstützte Betriebssysteme
-
-    ✅ Ubuntu >= 20.04 
-    ✅ Debian >= 10
-
-## 📁 Projektstruktur
-```bash
-JTL-Shop-5-install-script/
-│
-├── install.sh       # Haupt-Installationsscript
-├── README.md        # Diese Datei
-```
 
 ## 🛡️ Lizenz
 
-Dieses Projekt steht unter der MIT License – siehe LICENSE Datei für weitere Informationen.
+Dieses Projekt steht unter der GNU Public license.
 
 ## 👨‍💻 Credits
 
-Erstellt von Developers Garden
+Erstellt von Developers Garden 
+
+Website: (https://devgarden.de)
 
 GitHub: https://github.com/devgarden-de
 
