@@ -241,9 +241,6 @@ echo "=== UFW Firewall aktivieren ==="
 fi
 
 echo ">> "
-echo ">> "
-echo "=== Basis Installation abgeschlossen ==="
-echo " "
 echo ">> Öffne Sie im Browser: https://$DOMAIN/systemcheck zur Prüfung des JTL Shop Systems"
 echo ">> "
 
@@ -273,7 +270,7 @@ echo " === Entferne install verzeichniss und korrigiere Dateirechte ==="
 sudo chmod 644 $JTL_INSTALL_DIR/includes/config.JTL-Shop.ini.php
 sudo rm -rf $JTL_INSTALL_DIR/install
 
-
+echo " ###############  INSTALLATION ABGESCHOSSEN ############### "
 echo " "
 echo " === Bitte notieren Sie sich die Zugangsdaten!"
 echo " "
@@ -294,6 +291,8 @@ echo ">> Datenbank password: $DB_PASS"
 echo ">> Datenbank name: $DB_NAME"
 echo ">> Datenbank host: $DB_HOST"
 echo " "
+echo " ## PHP INI Datei explizit für den Shop"
+echo "$JTL_PHP_INI"
 echo " "
 echo " ## Ihr Onlineshop $DOMAIN ist einsatzbereit "
 echo " "
