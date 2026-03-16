@@ -44,13 +44,13 @@ ADMIN_PASS=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 20 | head -n 1)
 SYNC_USER="jtlsync"
 SYNC_PASS=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 20 | head -n 1)
 
-## JTL Version
-JTL_VERSION="v5-5-2"
+## JTL Version (Release - 30.09.2025)
+JTL_VERSION="v5-6-1"
 JTL_ZIP_URL="https://build.jtl-shop.de/get/shop-$JTL_VERSION.zip"
 TEST_SCRIPT="https://build.jtl-shop.de/get/shop5-systemcheck-5-0-0.zip"
 
-# PHP
-PHP_VERSION="8.2"
+# PHP Version 8.3 
+PHP_VERSION="8.3"
 JTL_PHP_INI="/etc/php/${PHP_VERSION}/apache2/conf.d/99-jtl-shop-$JTL_VERSION.ini"
 MAX_EXECUTION_TIME="120"        # Maximale Ausführungszeit eines PHP-Skripts in Sekunden.
 MEMORY_LIMIT="128M"             # Maximale Speichernutzung pro PHP-Skript.
